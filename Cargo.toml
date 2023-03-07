@@ -3,6 +3,10 @@ name = "tap_os"
 version = "0.1.0"
 edition = "2021"
 
+[dependencies]
+bootloader = "0.9.23"
+volatile = "0.2.6"
+
 [profile.dev]
 panic = "abort"
 
