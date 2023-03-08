@@ -1,6 +1,8 @@
 # TapOS
 > Tap ain't POSIX
 
+![](https://img.shields.io/github/actions/workflow/status/IsaacMarovitz/tap_os/build.yml?style=for-the-badge)
+
 Experimental, in progress, operating system. Tap is based on a few core [design principles](https://isaacmarovitz.notion.site/TapOS-d00529f1697445fba412a0ebed03f3a8) that seek to modernise and streamline how operating systems work on modern devices.
 
 Rusty from top to bottom 🦀
