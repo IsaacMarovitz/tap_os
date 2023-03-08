@@ -15,7 +15,7 @@ mod font_constants {
 }
 
 const LINE_SPACING: usize = 2;
-const LETTER_SPACING: usize = 6;
+const LETTER_SPACING: usize = 0;
 const BORDER_PADDING: usize = 1;
 
 fn get_char_raster(c: char) -> RasterizedChar {
