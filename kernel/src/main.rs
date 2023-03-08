@@ -12,7 +12,8 @@ extern crate uart_16550;
 extern crate log;
 
 use core::panic::PanicInfo;
-use bootloader_api::{entry_point, BootInfo};
+use bootloader_api::{entry_point, BootInfo, info::{FrameBufferInfo, FrameBuffer}};
+use log::LevelFilter;
 
 mod logger;
 mod framebuffer;
@@ -26,7 +27,39 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     #[cfg(test)]
     test_main();
 
+    let info = boot_info.framebuffer.as_ref().unwrap().info();
+    let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
+
+    init_logger(
+        framebuffer,
+        info, 
+        LevelFilter::Debug, 
+        true, 
+        true
+    );
+    
     loop {}
+}
+
+fn init_logger(
+    framebuffer: &'static mut [u8],
+    info: FrameBufferInfo,
+    log_level: LevelFilter,
+    frame_buffer_logger_status: bool,
+    serial_logger_status: bool,
+) {
+    let logger = logger::LOGGER.get_or_init(move || {
+        logger::LockedLogger::new(
+            framebuffer, 
+            info, 
+            frame_buffer_logger_status, 
+            serial_logger_status
+        )
+    });
+
+    log::set_logger(logger).expect("Logger already set");
+    log::set_max_level(log_level);
+    log::info!("Framebuffer info: {:?}", info);
 }
 
 #[panic_handler]
