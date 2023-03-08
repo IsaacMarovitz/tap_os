@@ -11,14 +11,16 @@ env:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout the repo
+      uses: actions/checkout@v3
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1.0.6
       with:
         toolchain: nightly
         override: true
-        components: llvm-tools-preview
+        components: llvm-tools-preview, rust-src
     - name: Build
       run: cargo build --verbose
