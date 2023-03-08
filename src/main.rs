@@ -1,22 +1,10 @@
-#![no_std]
-#![no_main]
+fn main() {
+    let uefi_path = env!("UEFI_PATH");
 
-use core::panic::PanicInfo;
-mod vga_buffer;
+    let mut cmd = std::process::Command::new("qemu-system-x86_64");
+    cmd.arg("-bios").arg(ovmf_prebuilt::ovmf_pure_efi());
+    cmd.arg("-drive").arg(format!("format=raw,file={uefi_path}"));
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    println!("Welcome to TapOS!");
-    println!();
-    print!("The answer to life, the universe and everything is {}.", "42");
-
-    print!("According to all known laws of aviation, there is no way a bee should be able to fly.\nIts wings are too small to get its fat little body off the ground.\nThe bee, of course, flies anyway because bees don't care what humans think is impossible.\nYellow, black. Yellow, black. Yellow, black. Yellow, black.\nOoh, black and yellow!\nLet's shake it up a little.");
-
-    loop {}
-}
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    println!("{}", _info);
-    loop {}
+    let mut child = cmd.spawn().unwrap();
+    child.wait().unwrap();
 }
