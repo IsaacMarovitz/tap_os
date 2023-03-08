@@ -22,11 +22,6 @@ mod serial;
 entry_point!(start);
 
 fn start(boot_info: &'static mut BootInfo) -> ! {
-    // println!("Welcome to TapOS!");
-
-    #[cfg(test)]
-    test_main();
-
     let info = boot_info.framebuffer.as_ref().unwrap().info();
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
@@ -37,7 +32,12 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
         true, 
         true
     );
+
+    log::info!("Welcome to TapOS!");
     
+    #[cfg(test)]
+    test_main();
+
     loop {}
 }
 
@@ -59,19 +59,18 @@ fn init_logger(
 
     log::set_logger(logger).expect("Logger already set");
     log::set_max_level(log_level);
-    log::info!("Framebuffer info: {:?}", info);
 }
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    // println!("{}", _info);
+    log::error!("{}", _info);
 
     loop {}
 }
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    // println!("Running {} tests", tests.len());
+    log::info!("Running {} tests", tests.len());
     for test in tests {
         test();
     }
@@ -79,7 +78,7 @@ fn test_runner(tests: &[&dyn Fn()]) {
 
 #[test_case]
 fn trivial_assertion() {
-    // print!("trivial assertion... ");
+    log::info!("trivial assertion... ");
     assert_eq!(1, 1);
-    // println!("[ok]");
+    log::info!("[ok]");
 }
