@@ -16,4 +16,5 @@ It doesn't do much right now, but Rome wasn't built in a day.
 1. Update rust: `rustup update`
 2. Switch to nightly: `rustup override set nightly`
 3. Add `llvm-tools-preview`: `rustup component add llvm-tools-preview`
+4. Add x86_64 target: `rustup target add x86_64-unknown-none`
 4. Build and run: `cargo run`
