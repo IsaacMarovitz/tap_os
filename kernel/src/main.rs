@@ -9,6 +9,7 @@ extern crate spinning_top;
 extern crate conquer_once;
 extern crate noto_sans_mono_bitmap;
 extern crate uart_16550;
+extern crate log;
 
 use core::panic::PanicInfo;
 use bootloader_api::{entry_point, BootInfo};
