@@ -1,4 +1,3 @@
-use bootloader_api::BootInfo;
 use bootloader_api::info::{MemoryRegionKind, MemoryRegions};
 use core::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use x86_64::instructions::interrupts;
@@ -15,10 +14,10 @@ static ALLOCATED_FRAMES: AtomicUsize = AtomicUsize::new(0);
 
 // Referenced from https://github.com/vinc/moros/blob/trunk/src/sys/mem.rs
 
-pub fn init_memory(boot_info: &'static BootInfo) {
+pub fn init_memory(memory_regions: &'static MemoryRegions, physical_memory_offset: u64) {
     interrupts::without_interrupts(|| {
         let mut memory_size = 0;
-        for region in boot_info.memory_regions.iter() {
+        for region in memory_regions.iter() {
             let start_addr = region.start;
             let end_addr = region.end;
             memory_size += end_addr - start_addr;
@@ -26,11 +25,11 @@ pub fn init_memory(boot_info: &'static BootInfo) {
 
         MEMORY_SIZE.store(memory_size, Ordering::Relaxed);
 
-        unsafe { PHYSICAL_MEMORY_OFFSET = *boot_info.physical_memory_offset.as_ref().unwrap() };
-        unsafe { MEMORY_MAP.replace(&boot_info.memory_regions) };
+        unsafe { PHYSICAL_MEMORY_OFFSET = physical_memory_offset };
+        unsafe { MEMORY_MAP.replace(&memory_regions) };
 
         let mut mapper = unsafe { mapper(VirtAddr::new(PHYSICAL_MEMORY_OFFSET)) };
-        let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_regions) };
+        let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&memory_regions) };
 
         allocator::init_heap(&mut mapper, &mut frame_allocator).expect("Heap init failed!");
     });
