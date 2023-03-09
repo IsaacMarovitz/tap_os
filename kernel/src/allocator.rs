@@ -2,7 +2,6 @@ use linked_list_allocator::LockedHeap;
 use x86_64::VirtAddr;
 use x86_64::structures::paging::mapper::MapToError;
 use x86_64::structures::paging::{Mapper, Size4KiB, FrameAllocator, Page, PageTableFlags};
-use core::cmp;
 use memory;
 
 pub const HEAP_START: u64 = 0x4444_4444_0000;
@@ -12,15 +11,11 @@ pub const HEAP_START: u64 = 0x4444_4444_0000;
 #[global_allocator]
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
-fn max_memory() -> u64 {
-    // TODO: Fix
-    return u64::MAX;
-}
-
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>, 
     frame_allocator: &mut impl FrameAllocator<Size4KiB>) -> Result<(), MapToError<Size4KiB>> {
-    let heap_size = cmp::min(memory::memory_size(), max_memory()) / 2;
+    // Expand this later
+    let heap_size = memory::memory_size() / 4;
     let heap_start = VirtAddr::new(HEAP_START);
 
     let pages = {
