@@ -1,15 +1,16 @@
 use crate::{framebuffer::FrameBufferWriter, serial::SerialPort};
 use bootloader_api::info::FrameBufferInfo;
-use conquer_once::{spin::OnceCell};
-use spinning_top::Spinlock;
+use conquer_once::spin::OnceCell;
 use core::fmt::Write;
 use log::LevelFilter;
+use spinning_top::Spinlock;
 
 pub static LOGGER: OnceCell<LockedLogger> = OnceCell::uninit();
 
 pub struct LockedLogger {
     framebuffer: Option<Spinlock<FrameBufferWriter>>,
     serial: Option<Spinlock<SerialPort>>,
+    level: log::Level,
 }
 
 impl LockedLogger {
@@ -29,7 +30,11 @@ impl LockedLogger {
             false => None,
         };
 
-        LockedLogger { framebuffer, serial, }
+        LockedLogger {
+            framebuffer,
+            serial,
+            level: log::Level::Error,
+        }
     }
 
     pub unsafe fn force_unlock(&self) {
@@ -44,8 +49,8 @@ impl LockedLogger {
 }
 
 impl log::Log for LockedLogger {
-    fn enabled(&self, _metadata: &log::Metadata) -> bool {
-        true
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        metadata.level() <= self.level
     }
 
     fn log(&self, record: &log::Record) {
@@ -71,13 +76,14 @@ pub fn init_logger(
 ) {
     let logger = LOGGER.get_or_init(move || {
         LockedLogger::new(
-            framebuffer, 
-            info, 
-            frame_buffer_logger_status, 
-            serial_logger_status
+            framebuffer,
+            info,
+            frame_buffer_logger_status,
+            serial_logger_status,
         )
     });
 
     log::set_logger(logger).expect("Logger already set");
     log::set_max_level(log_level);
 }
+
