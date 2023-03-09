@@ -1,5 +1,5 @@
 use core::ptr::NonNull;
-use acpi::{ AcpiHandler, PhysicalMapping };
+use acpi::{AcpiHandler, PhysicalMapping, AcpiTables};
 use x86_64::PhysAddr;
 use memory;
 
@@ -14,7 +14,17 @@ impl AcpiHandler for TapHandler {
         PhysicalMapping::new(physical_address, NonNull::new(virtual_address.as_mut_ptr()).unwrap(), size, size, Self)
     }
 
-    fn unmap_physical_region<T>(region: &PhysicalMapping<Self, T>) {
+    fn unmap_physical_region<T>(_region: &PhysicalMapping<Self, T>) {
         unimplemented!();
+    }
+}
+
+pub fn init_acpi(rspd: usize) {
+    unsafe {
+        let handler: TapHandler = TapHandler;
+        match AcpiTables::from_rsdp(handler, rspd) {
+            Ok(_) => {log::info!("ACPI Table creation succeeded")},
+            Err(_) => {panic!("Failed to create ACPI Table!")},
+        }
     }
 }

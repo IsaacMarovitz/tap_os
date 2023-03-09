@@ -16,9 +16,7 @@ extern crate alloc;
 extern crate x86_64;
 
 use core::panic::PanicInfo;
-use acpi::{AcpiTables};
-use acpi_handler::TapHandler;
-use bootloader_api::{entry_point, BootInfo, info::{FrameBufferInfo}};
+use bootloader_api::{entry_point, BootInfo};
 use log::LevelFilter;
 
 mod logger;
@@ -34,7 +32,7 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     let info = boot_info.framebuffer.as_ref().unwrap().info();
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
-    init_logger(
+    logger::init_logger(
         framebuffer,
         info, 
         LevelFilter::Debug, 
@@ -44,7 +42,7 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
 
     let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
 
-    init_acpi(rsdp);
+    acpi_handler::init_acpi(rsdp);
 
     log::info!("Welcome to TapOS!");
     
@@ -52,33 +50,6 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     test_main();
 
     loop {}
-}
-
-fn init_logger(
-    framebuffer: &'static mut [u8],
-    info: FrameBufferInfo,
-    log_level: LevelFilter,
-    frame_buffer_logger_status: bool,
-    serial_logger_status: bool,
-) {
-    let logger = logger::LOGGER.get_or_init(move || {
-        logger::LockedLogger::new(
-            framebuffer, 
-            info, 
-            frame_buffer_logger_status, 
-            serial_logger_status
-        )
-    });
-
-    log::set_logger(logger).expect("Logger already set");
-    log::set_max_level(log_level);
-}
-
-fn init_acpi(rspd: usize) {
-    unsafe {
-        let handler: TapHandler = TapHandler;
-        AcpiTables::from_rsdp(handler, rspd);
-    }
 }
 
 #[panic_handler]

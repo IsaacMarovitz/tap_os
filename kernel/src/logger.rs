@@ -3,6 +3,7 @@ use bootloader_api::info::FrameBufferInfo;
 use conquer_once::{spin::OnceCell};
 use spinning_top::Spinlock;
 use core::fmt::Write;
+use log::LevelFilter;
 
 pub static LOGGER: OnceCell<LockedLogger> = OnceCell::uninit();
 
@@ -59,4 +60,24 @@ impl log::Log for LockedLogger {
     }
 
     fn flush(&self) {}
+}
+
+pub fn init_logger(
+    framebuffer: &'static mut [u8],
+    info: FrameBufferInfo,
+    log_level: LevelFilter,
+    frame_buffer_logger_status: bool,
+    serial_logger_status: bool,
+) {
+    let logger = LOGGER.get_or_init(move || {
+        LockedLogger::new(
+            framebuffer, 
+            info, 
+            frame_buffer_logger_status, 
+            serial_logger_status
+        )
+    });
+
+    log::set_logger(logger).expect("Logger already set");
+    log::set_max_level(log_level);
 }
