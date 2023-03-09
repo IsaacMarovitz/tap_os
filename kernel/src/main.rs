@@ -33,6 +33,8 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     let info = boot_info.framebuffer.as_ref().unwrap().info();
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
+    memory::init_memory(boot_info);
+
     logger::init_logger(
         framebuffer,
         info, 
