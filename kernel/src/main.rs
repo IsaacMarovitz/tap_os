@@ -29,6 +29,7 @@ mod acpi_handler;
 mod allocator;
 mod memory;
 mod interrupts;
+mod apic;
 
 pub static BOOTLOADER_CONFIG: BootloaderConfig = {
     let mut config = BootloaderConfig::new_default();

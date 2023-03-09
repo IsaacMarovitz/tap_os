@@ -1,7 +1,8 @@
 use core::ptr::NonNull;
-use acpi::{AcpiHandler, PhysicalMapping, AcpiTables};
+use acpi::{AcpiHandler, PhysicalMapping, AcpiTables, PlatformInfo, InterruptModel};
 use x86_64::PhysAddr;
 use memory;
+use apic;
 
 // Referenced from https://github.com/vinc/moros/blob/trunk/src/sys/acpi.rs
 
@@ -22,9 +23,25 @@ impl AcpiHandler for TapHandler {
 pub fn init(rspd: usize) {
     unsafe {
         let handler: TapHandler = TapHandler;
+        let tables: AcpiTables<TapHandler>;
         match AcpiTables::from_rsdp(handler, rspd) {
-            Ok(_) => {log::info!("ACPI table created...")},
+            Ok(new_tables) => {
+                tables = new_tables;
+                log::info!("ACPI table created...")
+            },
             Err(_) => {panic!("Failed to create ACPI Table!")},
+        }
+
+        match PlatformInfo::new(&tables) {
+            Ok(platform_info) => {
+                match platform_info.interrupt_model {
+                    InterruptModel::Apic(apic) => {
+                        apic::init(apic.io_apics);
+                    },
+                    _ => {panic!("Failed to get APIC!")},
+                }
+            },
+            Err(_) => {panic!("Failed to get platform info!")},
         }
     }
 }
