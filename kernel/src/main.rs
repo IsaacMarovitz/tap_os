@@ -47,17 +47,23 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
         true
     );
 
+    log::info!("Logger initialized...");
+
     let physical_memory_offset = *boot_info.physical_memory_offset.as_ref().unwrap();
     let memory_info = &boot_info.memory_regions;
     memory::init_memory(memory_info, physical_memory_offset);
 
+    log::info!("Memory initialized...");
+
     let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
     acpi_handler::init_acpi(rsdp);
 
-    log::info!("Welcome to TapOS!");
+    log::info!("ACPI initialized...");
     
     #[cfg(test)]
     test_main();
+
+    log::info!("Welcome to TapOS!");
 
     loop {}
 }
