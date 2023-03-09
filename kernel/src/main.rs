@@ -13,6 +13,7 @@ extern crate uart_16550;
 extern crate log;
 extern crate acpi;
 extern crate alloc;
+extern crate x86_64;
 
 use core::panic::PanicInfo;
 use acpi::{AcpiTables};
@@ -25,6 +26,7 @@ mod framebuffer;
 mod serial;
 mod acpi_handler;
 mod allocator;
+mod memory;
 
 entry_point!(start);
 
