@@ -33,7 +33,7 @@ impl LockedLogger {
         LockedLogger {
             framebuffer,
             serial,
-            level: log::Level::Error,
+            level: log::Level::Trace,
         }
     }
 
@@ -86,4 +86,3 @@ pub fn init_logger(
     log::set_logger(logger).expect("Logger already set");
     log::set_max_level(log_level);
 }
-
