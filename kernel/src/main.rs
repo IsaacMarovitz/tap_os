@@ -14,6 +14,7 @@ extern crate log;
 extern crate acpi;
 extern crate alloc;
 extern crate x86_64;
+extern crate linked_list_allocator;
 
 use core::panic::PanicInfo;
 use bootloader_api::{entry_point, BootInfo};

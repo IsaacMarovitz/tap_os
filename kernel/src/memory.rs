@@ -5,6 +5,7 @@ use x86_64::instructions::interrupts;
 use x86_64::registers::control::Cr3;
 use x86_64::structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB, Translate};
 use x86_64::{PhysAddr, VirtAddr};
+use allocator;
 
 pub static mut PHYSICAL_MEMORY_OFFSET: u64 = 0;
 pub static mut MEMORY_MAP: Option<&MemoryRegions> = None;
@@ -31,7 +32,7 @@ pub fn init_memory(boot_info: &'static BootInfo) {
         let mut mapper = unsafe { mapper(VirtAddr::new(PHYSICAL_MEMORY_OFFSET)) };
         let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_regions) };
 
-        // TODO: Heap alloc
+        allocator::init_heap(&mut mapper, &mut frame_allocator).expect("Heap init failed!");
     });
 }
 
