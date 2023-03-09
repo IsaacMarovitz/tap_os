@@ -30,9 +30,7 @@ mod memory;
 entry_point!(start);
 
 fn start(boot_info: &'static mut BootInfo) -> ! {
-    let physical_memory_offset = boot_info.physical_memory_offset.as_ref().unwrap();
     let info = boot_info.framebuffer.as_ref().unwrap().info();
-    let memory_info = &boot_info.memory_regions;
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
     logger::init_logger(
@@ -43,6 +41,8 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
         true
     );
 
+    let physical_memory_offset = boot_info.physical_memory_offset.as_ref().unwrap();
+    let memory_info = &boot_info.memory_regions;
     memory::init_memory(memory_info, *physical_memory_offset);
 
     let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
