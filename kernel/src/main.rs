@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
+#![feature(alloc_error_handler)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
@@ -10,14 +11,20 @@ extern crate conquer_once;
 extern crate noto_sans_mono_bitmap;
 extern crate uart_16550;
 extern crate log;
+extern crate acpi;
+extern crate alloc;
 
 use core::panic::PanicInfo;
-use bootloader_api::{entry_point, BootInfo, info::{FrameBufferInfo, FrameBuffer}};
+use acpi::{AcpiTables};
+use acpi_handler::TapHandler;
+use bootloader_api::{entry_point, BootInfo, info::{FrameBufferInfo}};
 use log::LevelFilter;
 
 mod logger;
 mod framebuffer;
 mod serial;
+mod acpi_handler;
+mod allocator;
 
 entry_point!(start);
 
@@ -32,6 +39,10 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
         true, 
         true
     );
+
+    let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
+
+    init_acpi(rsdp);
 
     log::info!("Welcome to TapOS!");
     
@@ -59,6 +70,13 @@ fn init_logger(
 
     log::set_logger(logger).expect("Logger already set");
     log::set_max_level(log_level);
+}
+
+fn init_acpi(rspd: usize) {
+    unsafe {
+        let handler: TapHandler = TapHandler;
+        AcpiTables::from_rsdp(handler, rspd);
+    }
 }
 
 #[panic_handler]
