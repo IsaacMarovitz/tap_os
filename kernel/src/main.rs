@@ -17,7 +17,7 @@ extern crate x86_64;
 extern crate linked_list_allocator;
 
 use core::panic::PanicInfo;
-use bootloader_api::{entry_point, BootInfo};
+use bootloader_api::{entry_point, BootInfo, BootloaderConfig, config::Mapping};
 use log::LevelFilter;
 
 mod logger;
@@ -27,7 +27,13 @@ mod acpi_handler;
 mod allocator;
 mod memory;
 
-entry_point!(start);
+pub static BOOTLOADER_CONFIG: BootloaderConfig = {
+    let mut config = BootloaderConfig::new_default();
+    config.mappings.physical_memory = Some(Mapping::Dynamic);
+    config
+};
+
+entry_point!(start, config = &BOOTLOADER_CONFIG);
 
 fn start(boot_info: &'static mut BootInfo) -> ! {
     let info = boot_info.framebuffer.as_ref().unwrap().info();
@@ -41,9 +47,9 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
         true
     );
 
-    let physical_memory_offset = boot_info.physical_memory_offset.as_ref().unwrap();
+    let physical_memory_offset = *boot_info.physical_memory_offset.as_ref().unwrap();
     let memory_info = &boot_info.memory_regions;
-    memory::init_memory(memory_info, *physical_memory_offset);
+    memory::init_memory(memory_info, physical_memory_offset);
 
     let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
     acpi_handler::init_acpi(rsdp);
