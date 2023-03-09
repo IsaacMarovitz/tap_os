@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(custom_test_frameworks)]
 #![feature(alloc_error_handler)]
+#![feature(abi_x86_interrupt)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
@@ -15,6 +16,7 @@ extern crate acpi;
 extern crate alloc;
 extern crate x86_64;
 extern crate linked_list_allocator;
+extern crate lazy_static;
 
 use core::panic::PanicInfo;
 use bootloader_api::{entry_point, BootInfo, BootloaderConfig, config::Mapping};
@@ -26,6 +28,7 @@ mod serial;
 mod acpi_handler;
 mod allocator;
 mod memory;
+mod interrupts;
 
 pub static BOOTLOADER_CONFIG: BootloaderConfig = {
     let mut config = BootloaderConfig::new_default();
@@ -36,6 +39,8 @@ pub static BOOTLOADER_CONFIG: BootloaderConfig = {
 entry_point!(start, config = &BOOTLOADER_CONFIG);
 
 fn start(boot_info: &'static mut BootInfo) -> ! {
+    interrupts::init();
+
     let info = boot_info.framebuffer.as_ref().unwrap().info();
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
@@ -88,4 +93,9 @@ fn trivial_assertion() {
     log::info!("trivial assertion... ");
     assert_eq!(1, 1);
     log::info!("[ok]");
+}
+
+#[test_case]
+fn test_breakpoint_exception() {
+    x86_64::instructions::interrupts::int3();
 }

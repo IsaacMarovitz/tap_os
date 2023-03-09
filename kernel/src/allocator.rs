@@ -15,7 +15,7 @@ pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>, 
     frame_allocator: &mut impl FrameAllocator<Size4KiB>) -> Result<(), MapToError<Size4KiB>> {
     // Expand this later
-    let heap_size = memory::memory_size() / 4;
+    let heap_size = memory::memory_size() / 16;
     let heap_start = VirtAddr::new(HEAP_START);
 
     let pages = {
