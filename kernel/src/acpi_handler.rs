@@ -19,11 +19,11 @@ impl AcpiHandler for TapHandler {
     }
 }
 
-pub fn init_acpi(rspd: usize) {
+pub fn init(rspd: usize) {
     unsafe {
         let handler: TapHandler = TapHandler;
         match AcpiTables::from_rsdp(handler, rspd) {
-            Ok(_) => {log::info!("ACPI Table creation succeeded")},
+            Ok(_) => {log::info!("ACPI table created...")},
             Err(_) => {panic!("Failed to create ACPI Table!")},
         }
     }

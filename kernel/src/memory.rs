@@ -14,7 +14,7 @@ static ALLOCATED_FRAMES: AtomicUsize = AtomicUsize::new(0);
 
 // Referenced from https://github.com/vinc/moros/blob/trunk/src/sys/mem.rs
 
-pub fn init_memory(memory_regions: &'static MemoryRegions, physical_memory_offset: u64) {
+pub fn init(memory_regions: &'static MemoryRegions, physical_memory_offset: u64) {
     interrupts::without_interrupts(|| {
         let mut memory_size = 0;
         for region in memory_regions.iter() {

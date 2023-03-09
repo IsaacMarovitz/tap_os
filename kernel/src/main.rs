@@ -39,7 +39,7 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     let info = boot_info.framebuffer.as_ref().unwrap().info();
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
-    logger::init_logger(
+    logger::init(
         framebuffer,
         info, 
         LevelFilter::Debug, 
@@ -51,12 +51,12 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
 
     let physical_memory_offset = *boot_info.physical_memory_offset.as_ref().unwrap();
     let memory_info = &boot_info.memory_regions;
-    memory::init_memory(memory_info, physical_memory_offset);
+    memory::init(memory_info, physical_memory_offset);
 
     log::info!("Memory initialized...");
 
     let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
-    acpi_handler::init_acpi(rsdp);
+    acpi_handler::init(rsdp);
 
     log::info!("ACPI initialized...");
     

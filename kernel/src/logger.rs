@@ -67,7 +67,7 @@ impl log::Log for LockedLogger {
     fn flush(&self) {}
 }
 
-pub fn init_logger(
+pub fn init(
     framebuffer: &'static mut [u8],
     info: FrameBufferInfo,
     log_level: LevelFilter,
