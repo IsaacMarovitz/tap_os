@@ -15,7 +15,7 @@ impl AcpiHandler for TapHandler {
     }
 
     fn unmap_physical_region<T>(_region: &PhysicalMapping<Self, T>) {
-        unimplemented!();
+        log::warn!("ACPI unmap not implemented");
     }
 }
 
