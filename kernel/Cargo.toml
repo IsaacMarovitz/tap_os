@@ -11,6 +11,8 @@ log = "0.4.17"
 acpi = "4.1.1"
 x86_64 = "0.14.10"
 linked_list_allocator = "0.10.5"
+bit_field = "0.10.1"
+volatile = "0.4.1"
 
 [dependencies.lazy_static]
 version = "1.4.0"
