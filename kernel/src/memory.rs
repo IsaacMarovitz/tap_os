@@ -4,7 +4,7 @@ use x86_64::instructions::interrupts;
 use x86_64::registers::control::Cr3;
 use x86_64::structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB, Translate};
 use x86_64::{PhysAddr, VirtAddr};
-use allocator;
+use crate::allocator;
 
 pub static mut PHYSICAL_MEMORY_OFFSET: u64 = 0;
 pub static mut MEMORY_MAP: Option<&MemoryRegions> = None;

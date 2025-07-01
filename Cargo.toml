@@ -4,10 +4,11 @@ members = ["kernel"]
 [package]
 name = "tap_os"
 version = "0.1.0"
+edition = "2021"
 
 [build-dependencies]
-bootloader = "0.11"
+bootloader = "0.11.10"
 kernel = { path = "kernel", artifact = "bin", target = "x86_64-unknown-none" }
 
 [dependencies]
-ovmf-prebuilt = "0.1.0-alpha.1"
+ovmf-prebuilt = "0.2.3"

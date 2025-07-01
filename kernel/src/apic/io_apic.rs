@@ -1,40 +1,41 @@
 use core::convert::TryInto;
+use core::ptr::NonNull;
+use crate::apic::values;
 use super::bit_field::BitField;
-use super::volatile::Volatile;
-use apic::values;
+use super::volatile::VolatilePtr;
 
 // Referenced from https://github.com/rust-osdev/apic/blob/master/src/io_apic/mod.rs
 
 pub struct IoApicBase<'a> {
-    pub select: Volatile<&'a mut Select>,
-    pub window: Volatile<&'a mut u32>,
+    pub select: VolatilePtr<'a, Select>,
+    pub window: VolatilePtr<'a, u32>,
 }
 
 impl IoApicBase<'_> {
     pub unsafe fn new(base_addr: *mut u8) -> Self {
         Self {
-            select: unsafe { Self::offset(base_addr, Offset::Select) },
-            window: unsafe { Self::offset(base_addr, Offset::Window) },
+            select: Self::offset(base_addr, Offset::Select),
+            window: Self::offset(base_addr, Offset::Window),
         }
     }
 
     pub fn read_id(&mut self) -> u8 {
-        self.select.update(|v| v.set_index(Index::Id));
+        self.select.update(|mut v| v.set_index(Index::Id));
         self.window.read().get_bits(24..28).try_into().unwrap()
     }
 
     pub fn read_version(&mut self) -> values::Version {
-        self.select.update(|v| v.set_index(Index::Version));
+        self.select.update(|mut v| v.set_index(Index::Version));
         values::Version::from_raw(self.window.read())
     }
 
     pub fn read_arbitration(&mut self) -> values::Arbitration {
-        self.select.update(|v| v.set_index(Index::Arbitration));
+        self.select.update(|mut v| v.set_index(Index::Arbitration));
         values::Arbitration::from_raw(self.window.read())
     }
 
     pub fn write_arbitration(&mut self, value: values::Arbitration) {
-        self.select.update(|v| v.set_index(Index::Arbitration));
+        self.select.update(|mut v| v.set_index(Index::Arbitration));
         self.window.write(value.into_raw());
     }
 
@@ -44,10 +45,10 @@ impl IoApicBase<'_> {
         let index_low = Index::RedirectionTableEntryBase as u8 + irq * 2;
         let index_high = index_low + 1;
 
-        self.select.update(|v| v.set_index(index_low));
+        self.select.update(|mut v| v.set_index(index_low));
         let low = self.window.read();
 
-        self.select.update(|v| v.set_index(index_high));
+        self.select.update(|mut v| v.set_index(index_high));
         let high = self.window.read();
 
         values::RedirectionTableEntry::from_raw(low, high)
@@ -61,10 +62,10 @@ impl IoApicBase<'_> {
 
         let (low, high) = value.into_raw();
 
-        self.select.update(|v| v.set_index(index_low));
+        self.select.update(|mut v| v.set_index(index_low));
         self.window.write(low);
 
-        self.select.update(|v| v.set_index(index_high));
+        self.select.update(|mut v| v.set_index(index_high));
         self.window.write(high);
     }
 
@@ -79,9 +80,9 @@ impl IoApicBase<'_> {
         self.write_redirection_table_entry(irq, value);
     }
 
-    unsafe fn offset<'a, T>(base_addr: *mut u8, offset: Offset) -> Volatile<&'a mut T> {
+    unsafe fn offset<'a, T>(base_addr: *mut u8, offset: Offset) -> VolatilePtr<'a, T> {
         let ptr = Self::offset_ptr(base_addr, offset).cast();
-        Volatile::new(unsafe { &mut *ptr })
+        VolatilePtr::new(NonNull::new_unchecked(ptr))
     }
 
     fn offset_ptr(base_addr: *mut u8, offset: Offset) -> *mut u8 {
@@ -119,7 +120,8 @@ impl Select {
         Self(index.into())
     }
 
-    pub fn set_index(&mut self, index: impl Into<u8>) {
+    pub fn set_index(&mut self, index: impl Into<u8>) -> Self {
         self.0.set_bits(0..8, index.into().into());
+        *self
     }
 }

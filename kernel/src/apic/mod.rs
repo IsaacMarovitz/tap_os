@@ -1,6 +1,5 @@
 use acpi::{platform::interrupt::IoApic};
 use alloc::vec::Vec;
-use log::info;
 
 use crate::apic::{io_apic::IoApicBase};
 
@@ -18,8 +17,9 @@ pub fn init(io_apics: Vec<IoApic>) {
         log::info!("IOAPIC id: {}, address: {}, GSIB: {}", io_apic.id, io_apic.address, io_apic.global_system_interrupt_base);
         let base_addr: *mut u8 = &mut (io_apic.address as u8);
         let mut io_apic_base = unsafe { IoApicBase::new(base_addr) };
-        io_apic_base.read_redirection_table_entry(0).set_masked(true);
-        io_apic_base.update_redirection_table_entry(0, test);
+        // TODO: Currently breaks
+        // io_apic_base.read_redirection_table_entry(0).set_masked(true);
+        // io_apic_base.update_redirection_table_entry(0, test);
     }
 }
 

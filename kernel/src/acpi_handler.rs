@@ -1,8 +1,7 @@
 use core::ptr::NonNull;
 use acpi::{AcpiHandler, PhysicalMapping, AcpiTables, PlatformInfo, InterruptModel};
 use x86_64::PhysAddr;
-use memory;
-use apic;
+use crate::{apic, memory};
 
 // Referenced from https://github.com/vinc/moros/blob/trunk/src/sys/acpi.rs
 
@@ -36,7 +35,7 @@ pub fn init(rspd: usize) {
             Ok(platform_info) => {
                 match platform_info.interrupt_model {
                     InterruptModel::Apic(apic) => {
-                        apic::init(apic.io_apics);
+                        apic::init(apic.io_apics.to_vec());
                     },
                     _ => {panic!("Failed to get APIC!")},
                 }
