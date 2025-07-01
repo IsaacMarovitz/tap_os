@@ -1,10 +1,12 @@
+use crate::allocator;
 use bootloader_api::info::{MemoryRegionKind, MemoryRegions};
 use core::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use x86_64::instructions::interrupts;
 use x86_64::registers::control::Cr3;
-use x86_64::structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB, Translate};
+use x86_64::structures::paging::{
+    FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB, Translate,
+};
 use x86_64::{PhysAddr, VirtAddr};
-use crate::allocator;
 
 pub static mut PHYSICAL_MEMORY_OFFSET: u64 = 0;
 pub static mut MEMORY_MAP: Option<&MemoryRegions> = None;
@@ -64,7 +66,7 @@ unsafe fn active_level_4_table(physical_memory_offset: VirtAddr) -> &'static mut
 }
 
 pub struct BootInfoFrameAllocator {
-    memory_map: &'static MemoryRegions
+    memory_map: &'static MemoryRegions,
 }
 
 impl BootInfoFrameAllocator {

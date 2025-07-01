@@ -6,30 +6,30 @@
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-extern crate bootloader_api;
-extern crate spinning_top;
-extern crate conquer_once;
-extern crate noto_sans_mono_bitmap;
-extern crate uart_16550;
-extern crate log;
 extern crate acpi;
 extern crate alloc;
-extern crate x86_64;
-extern crate linked_list_allocator;
+extern crate bootloader_api;
+extern crate conquer_once;
 extern crate lazy_static;
+extern crate linked_list_allocator;
+extern crate log;
+extern crate noto_sans_mono_bitmap;
+extern crate spinning_top;
+extern crate uart_16550;
+extern crate x86_64;
 
+use bootloader_api::{config::Mapping, entry_point, BootInfo, BootloaderConfig};
 use core::panic::PanicInfo;
-use bootloader_api::{entry_point, BootInfo, BootloaderConfig, config::Mapping};
 use log::LevelFilter;
 
-mod logger;
-mod framebuffer;
-mod serial;
 mod acpi_handler;
 mod allocator;
-mod memory;
-mod interrupts;
 mod apic;
+mod framebuffer;
+mod interrupts;
+mod logger;
+mod memory;
+mod serial;
 
 pub static BOOTLOADER_CONFIG: BootloaderConfig = {
     let mut config = BootloaderConfig::new_default();
@@ -45,13 +45,7 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     let info = boot_info.framebuffer.as_ref().unwrap().info();
     let framebuffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
 
-    logger::init(
-        framebuffer,
-        info, 
-        LevelFilter::Debug, 
-        true, 
-        true
-    );
+    logger::init(framebuffer, info, LevelFilter::Debug, true, true);
 
     log::info!("Logger initialized...");
 
@@ -65,7 +59,7 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
     acpi_handler::init(rsdp);
 
     log::info!("ACPI initialized...");
-    
+
     #[cfg(test)]
     test_main();
 

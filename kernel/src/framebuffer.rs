@@ -1,6 +1,6 @@
+use self::font_constants::BACKUP_CHAR;
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use core::{fmt, ptr};
-use self::font_constants::BACKUP_CHAR;
 use noto_sans_mono_bitmap::{
     get_raster, get_raster_width, FontWeight, RasterHeight, RasterizedChar,
 };
@@ -33,7 +33,7 @@ pub struct FrameBufferWriter {
     framebuffer: &'static mut [u8],
     info: FrameBufferInfo,
     x_pos: usize,
-    y_pos: usize
+    y_pos: usize,
 }
 
 impl FrameBufferWriter {
@@ -82,11 +82,12 @@ impl FrameBufferWriter {
                     self.newline();
                 }
 
-                let new_ypos = self.y_pos + font_constants::CHAR_RASTER_HEIGHT.val() + BORDER_PADDING;
+                let new_ypos =
+                    self.y_pos + font_constants::CHAR_RASTER_HEIGHT.val() + BORDER_PADDING;
                 if new_ypos >= self.height() {
                     self.clear();
                 }
-                
+
                 self.write_rendered_char(get_char_raster(c));
             }
         }
@@ -120,9 +121,7 @@ impl FrameBufferWriter {
         self.framebuffer[byte_offset..(byte_offset + bytes_per_pixel)]
             .copy_from_slice(&color[..bytes_per_pixel]);
 
-        let _ = unsafe {
-            ptr::read_volatile(&self.framebuffer[byte_offset])
-        };
+        let _ = unsafe { ptr::read_volatile(&self.framebuffer[byte_offset]) };
     }
 }
 

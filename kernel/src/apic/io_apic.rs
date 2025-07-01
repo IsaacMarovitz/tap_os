@@ -1,8 +1,8 @@
-use core::convert::TryInto;
-use core::ptr::NonNull;
-use crate::apic::values;
 use super::bit_field::BitField;
 use super::volatile::VolatilePtr;
+use crate::apic::values;
+use core::convert::TryInto;
+use core::ptr::NonNull;
 
 // Referenced from https://github.com/rust-osdev/apic/blob/master/src/io_apic/mod.rs
 

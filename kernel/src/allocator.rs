@@ -1,9 +1,9 @@
+use crate::memory;
 use core::cmp::min;
 use linked_list_allocator::LockedHeap;
-use x86_64::VirtAddr;
 use x86_64::structures::paging::mapper::MapToError;
-use x86_64::structures::paging::{Mapper, Size4KiB, FrameAllocator, Page, PageTableFlags};
-use crate::memory;
+use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB};
+use x86_64::VirtAddr;
 
 pub const HEAP_START: u64 = 0x4444_4444_0000;
 
@@ -13,12 +13,12 @@ pub const HEAP_START: u64 = 0x4444_4444_0000;
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 pub fn init_heap(
-    mapper: &mut impl Mapper<Size4KiB>, 
-    frame_allocator: &mut impl FrameAllocator<Size4KiB>) -> Result<(), MapToError<Size4KiB>> {
+    mapper: &mut impl Mapper<Size4KiB>,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) -> Result<(), MapToError<Size4KiB>> {
     // Expand this later
     let total_memory = memory::memory_size();
-    let heap_size = (total_memory / 16)
-        .min(16 * 1024 * 1024); // Cap at 16MB
+    let heap_size = (total_memory / 16).min(16 * 1024 * 1024); // Cap at 16MB
     let heap_start = VirtAddr::new(HEAP_START);
 
     log::info!("Heap initialization:");
@@ -35,14 +35,18 @@ pub fn init_heap(
 
     let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
     for page in pages {
-        let frame = frame_allocator.allocate_frame().ok_or(MapToError::FrameAllocationFailed)?;
+        let frame = frame_allocator
+            .allocate_frame()
+            .ok_or(MapToError::FrameAllocationFailed)?;
         unsafe {
             mapper.map_to(page, frame, flags, frame_allocator)?.flush();
         }
     }
 
     unsafe {
-        ALLOCATOR.lock().init(heap_start.as_mut_ptr(), heap_size as usize);
+        ALLOCATOR
+            .lock()
+            .init(heap_start.as_mut_ptr(), heap_size as usize);
     }
 
     Ok(())

@@ -1,5 +1,5 @@
-use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 use lazy_static::lazy_static;
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -15,7 +15,10 @@ extern "x86-interrupt" fn breakpoint_handler(stack_frame: InterruptStackFrame) {
     log::error!("Exception: Breakpoint\n{:#?}", stack_frame);
 }
 
-extern "x86-interrupt" fn double_fault_handler(stack_frame: InterruptStackFrame, _error_code: u64) -> ! {
+extern "x86-interrupt" fn double_fault_handler(
+    stack_frame: InterruptStackFrame,
+    _error_code: u64,
+) -> ! {
     panic!("Exception: Double fault\n{:#?}", stack_frame);
 }
 
