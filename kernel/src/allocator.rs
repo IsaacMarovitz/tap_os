@@ -20,10 +20,10 @@ pub fn init_heap(
     let heap_size = (total_memory / 16).min(16 * 1024 * 1024); // Cap at 16MB
     let heap_start = VirtAddr::new(HEAP_START);
 
-    log::info!("Heap initialization:");
-    log::info!("  Total memory: {} MB", total_memory / (1024 * 1024));
-    log::info!("  Requested heap size: {} MB", heap_size / (1024 * 1024));
-    log::info!("  Heap pages needed: {}", heap_size / 4096);
+    log::info!("[ALLOC]: Heap initialization:");
+    log::info!("            Total memory: {} MB", total_memory / (1024 * 1024));
+    log::info!("            Requested heap size: {} MB", heap_size / (1024 * 1024));
+    log::info!("            Heap pages needed: {}", heap_size / 4096);
 
     let pages = {
         let heap_end = heap_start + heap_size - 1u64;

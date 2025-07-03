@@ -1,5 +1,5 @@
 use crate::{apic, memory};
-use acpi::platform::{AcpiPlatform, InterruptModel};
+use acpi::platform::{AcpiPlatform, InterruptModel, Processor, ProcessorInfo};
 use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
 use alloc::boxed::Box;
 use aml::{AmlContext, DebugVerbosity, Handler};
@@ -164,6 +164,14 @@ where
     }
 }
 
+fn display_processor(processor: Processor) {
+    log::info!("[ACPI]: Processor ID: {}, AP: {}, UID: {}, State: {:#?}",
+        processor.local_apic_id,
+        processor.is_ap,
+        processor.processor_uid,
+        processor.state);
+}
+
 pub fn init(rspd: usize) {
     let acpi: AcpiTables<TapHandler>;
 
@@ -194,13 +202,14 @@ pub fn init(rspd: usize) {
         );
     }
 
+    let handler = Box::new(TapAmlHandler);
+    let mut aml = AmlContext::new(handler, DebugVerbosity::All);
+
     if let Ok(dsdt) = acpi.dsdt() {
         let virtual_address = memory::phys_to_virt(PhysAddr::new(dsdt.phys_address as u64));
         let table =
             unsafe { core::slice::from_raw_parts(virtual_address.as_ptr(), dsdt.length as usize) };
 
-        let handler = Box::new(TapAmlHandler);
-        let mut aml = AmlContext::new(handler, DebugVerbosity::All);
         if aml.parse_table(table).is_ok() {
             log::info!("[ACPI]: AML DSDT parsed successfully");
         } else {
@@ -208,13 +217,40 @@ pub fn init(rspd: usize) {
         }
     }
 
+    for table in acpi.ssdts() {
+        let virtual_address = memory::phys_to_virt(PhysAddr::new(table.phys_address as u64));
+        let table =
+            unsafe { core::slice::from_raw_parts(virtual_address.as_ptr(), table.length as usize) };
+
+        if aml.parse_table(table).is_ok() {
+            log::info!("[ACPI]: AML SSDT parsed successfully");
+        } else {
+            log::error!("[ACPI]: Could not parse AML in SSDT");
+        }
+    }
+
     match AcpiPlatform::new(acpi) {
-        Ok(platform_info) => match platform_info.interrupt_model {
-            InterruptModel::Apic(apic) => {
-                apic::init(apic.io_apics.to_vec());
+        Ok(platform_info) => {
+            log::info!("[ACPI]: Power Profile: {:#?}", platform_info.power_profile);
+            
+            match platform_info.processor_info {
+                Some(processor_info) => {
+                    display_processor(processor_info.boot_processor);
+                    
+                    for processor in processor_info.application_processors {
+                        display_processor(processor);
+                    }
+                }
+                None => {}
             }
-            _ => {
-                panic!("[ACPI]: Failed to get APIC!")
+            
+            match platform_info.interrupt_model {
+                InterruptModel::Apic(apic) => {
+                    apic::init(apic.io_apics.to_vec());
+                }
+                _ => {
+                    panic!("[ACPI]: Failed to get APIC!")
+                }
             }
         },
         Err(_) => {
