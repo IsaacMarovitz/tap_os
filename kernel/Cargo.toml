@@ -9,9 +9,10 @@ conquer-once = { version = "0.4.0", default-features = false }
 spinning_top = "0.3.0"
 uart_16550 = "0.3.2"
 log = "0.4.27"
-acpi = "5.2.0"
+acpi = { git = "https://github.com/IsaacWoods/acpi.git" }
+aml = "0.16.4"
 x86_64 = { version = "0.15.2", features = ["instructions"] }
-linked_list_allocator = "0.10.5"
+good_memory_allocator = "0.1.7"
 bit_field = "0.10.1"
 volatile = "0.6.1"
 

@@ -11,7 +11,7 @@ extern crate alloc;
 extern crate bootloader_api;
 extern crate conquer_once;
 extern crate lazy_static;
-extern crate linked_list_allocator;
+extern crate good_memory_allocator;
 extern crate log;
 extern crate noto_sans_mono_bitmap;
 extern crate spinning_top;
@@ -47,23 +47,23 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
 
     logger::init(framebuffer, info, LevelFilter::Debug, true, true);
 
-    log::info!("Logger initialized...");
+    log::info!("[KERN]: Logger initialized...");
 
     let physical_memory_offset = *boot_info.physical_memory_offset.as_ref().unwrap();
     let memory_info = &boot_info.memory_regions;
     memory::init(memory_info, physical_memory_offset);
 
-    log::info!("Memory initialized...");
+    log::info!("[KERN]: Memory initialized...");
 
     let rsdp = *boot_info.rsdp_addr.as_ref().unwrap() as usize;
     acpi_handler::init(rsdp);
 
-    log::info!("ACPI initialized...");
+    log::info!("[KERN]: ACPI initialized...");
 
     #[cfg(test)]
     test_main();
 
-    log::info!("Welcome to TapOS!");
+    log::info!("[KERN]: Welcome to TapOS!");
 
     loop {}
 }

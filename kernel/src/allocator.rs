@@ -1,6 +1,6 @@
 use crate::memory;
 use core::cmp::min;
-use linked_list_allocator::LockedHeap;
+use good_memory_allocator::SpinLockedAllocator;
 use x86_64::structures::paging::mapper::MapToError;
 use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB};
 use x86_64::VirtAddr;
@@ -10,7 +10,7 @@ pub const HEAP_START: u64 = 0x4444_4444_0000;
 // Referenced from https://github.com/vinc/moros/blob/trunk/src/sys/allocator.rs
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: SpinLockedAllocator = SpinLockedAllocator::empty();
 
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
@@ -44,22 +44,8 @@ pub fn init_heap(
     }
 
     unsafe {
-        ALLOCATOR
-            .lock()
-            .init(heap_start.as_mut_ptr(), heap_size as usize);
+        ALLOCATOR.init(heap_start.as_u64() as usize, heap_size as usize);
     }
 
     Ok(())
-}
-
-pub fn memory_size() -> usize {
-    ALLOCATOR.lock().size()
-}
-
-pub fn memory_used() -> usize {
-    ALLOCATOR.lock().used()
-}
-
-pub fn memory_free() -> usize {
-    ALLOCATOR.lock().free()
 }

@@ -33,7 +33,7 @@ pub fn init(memory_regions: &'static MemoryRegions, physical_memory_offset: u64)
         let mut mapper = unsafe { mapper(VirtAddr::new(PHYSICAL_MEMORY_OFFSET)) };
         let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&memory_regions) };
 
-        allocator::init_heap(&mut mapper, &mut frame_allocator).expect("Heap init failed!");
+        allocator::init_heap(&mut mapper, &mut frame_allocator).expect("[MEM]: Heap init failed!");
     });
 }
 
