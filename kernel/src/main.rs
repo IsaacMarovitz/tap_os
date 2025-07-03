@@ -4,14 +4,13 @@
 #![feature(alloc_error_handler)]
 #![feature(abi_x86_interrupt)]
 #![test_runner(crate::test_runner)]
-#![reexport_test_harness_main = "test_main"]
 
 extern crate acpi;
 extern crate alloc;
 extern crate bootloader_api;
 extern crate conquer_once;
-extern crate lazy_static;
 extern crate good_memory_allocator;
+extern crate lazy_static;
 extern crate log;
 extern crate noto_sans_mono_bitmap;
 extern crate spinning_top;
@@ -60,9 +59,6 @@ fn start(boot_info: &'static mut BootInfo) -> ! {
 
     log::info!("[KERN]: ACPI initialized...");
 
-    #[cfg(test)]
-    test_main();
-
     log::info!("[KERN]: Welcome to TapOS!");
 
     loop {}
@@ -81,16 +77,4 @@ fn test_runner(tests: &[&dyn Fn()]) {
     for test in tests {
         test();
     }
-}
-
-#[test_case]
-fn trivial_assertion() {
-    log::info!("trivial assertion... ");
-    assert_eq!(1, 1);
-    log::info!("[ok]");
-}
-
-#[test_case]
-fn test_breakpoint_exception() {
-    x86_64::instructions::interrupts::int3();
 }

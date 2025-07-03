@@ -1,10 +1,10 @@
-use alloc::boxed::Box;
-use core::fmt::Display;
 use crate::{apic, memory};
-use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
-use core::ptr::NonNull;
 use acpi::platform::{AcpiPlatform, InterruptModel};
+use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
+use alloc::boxed::Box;
 use aml::{AmlContext, DebugVerbosity, Handler};
+use core::fmt::Display;
+use core::ptr::NonNull;
 use x86_64::PhysAddr;
 
 // Referenced from https://github.com/vinc/moros/blob/trunk/src/sys/acpi.rs
@@ -28,7 +28,7 @@ impl AcpiHandler for TapHandler {
         )
     }
 
-    fn unmap_physical_region<T>(_region: &PhysicalMapping<Self, T>) { }
+    fn unmap_physical_region<T>(_region: &PhysicalMapping<Self, T>) {}
 }
 
 #[derive(Clone)]
@@ -80,15 +80,21 @@ impl Handler for TapAmlHandler {
     }
 
     fn write_io_u8(&self, port: u16, value: u8) {
-        unsafe { x86_64::instructions::port::Port::new(port).write(value); }
+        unsafe {
+            x86_64::instructions::port::Port::new(port).write(value);
+        }
     }
 
     fn write_io_u16(&self, port: u16, value: u16) {
-        unsafe { x86_64::instructions::port::Port::new(port).write(value); }
+        unsafe {
+            x86_64::instructions::port::Port::new(port).write(value);
+        }
     }
 
     fn write_io_u32(&self, port: u16, value: u32) {
-        unsafe { x86_64::instructions::port::Port::new(port).write(value); }
+        unsafe {
+            x86_64::instructions::port::Port::new(port).write(value);
+        }
     }
 
     fn read_pci_u8(&self, segment: u16, bus: u8, device: u8, function: u8, offset: u16) -> u8 {
@@ -103,32 +109,65 @@ impl Handler for TapAmlHandler {
         todo!()
     }
 
-    fn write_pci_u8(&self, segment: u16, bus: u8, device: u8, function: u8, offset: u16, value: u8) {
+    fn write_pci_u8(
+        &self,
+        segment: u16,
+        bus: u8,
+        device: u8,
+        function: u8,
+        offset: u16,
+        value: u8,
+    ) {
         todo!()
     }
 
-    fn write_pci_u16(&self, segment: u16, bus: u8, device: u8, function: u8, offset: u16, value: u16) {
+    fn write_pci_u16(
+        &self,
+        segment: u16,
+        bus: u8,
+        device: u8,
+        function: u8,
+        offset: u16,
+        value: u16,
+    ) {
         todo!()
     }
 
-    fn write_pci_u32(&self, segment: u16, bus: u8, device: u8, function: u8, offset: u16, value: u32) {
+    fn write_pci_u32(
+        &self,
+        segment: u16,
+        bus: u8,
+        device: u8,
+        function: u8,
+        offset: u16,
+        value: u32,
+    ) {
         todo!()
     }
 }
 
-fn read_addr<T>(addr: usize) -> T where T: Copy {
+fn read_addr<T>(addr: usize) -> T
+where
+    T: Copy,
+{
     let virtual_address = memory::phys_to_virt(PhysAddr::new(addr as u64));
     unsafe { *virtual_address.as_ptr::<T>() }
 }
 
-fn write_addr<T>(addr: usize, value: T) where T: Copy + Display {
+fn write_addr<T>(addr: usize, value: T)
+where
+    T: Copy + Display,
+{
     let virtual_address = memory::phys_to_virt(PhysAddr::new(addr as u64));
-    unsafe { *virtual_address.as_mut_ptr::<T>() = value; }
+    unsafe {
+        *virtual_address.as_mut_ptr::<T>() = value;
+    }
 }
 
 pub fn init(rspd: usize) {
+    let acpi: AcpiTables<TapHandler>;
+
     unsafe {
-        let acpi: AcpiTables<TapHandler>;
         match AcpiTables::from_rsdp(TapHandler, rspd) {
             Ok(tables) => {
                 acpi = tables;
@@ -138,49 +177,48 @@ pub fn init(rspd: usize) {
                 panic!("[ACPI]: Failed to create ACPI Table!")
             }
         }
+    }
 
-        for (addr, table) in acpi.table_headers() {
-            log::info!(
-                "[ACPI]: {} {:8x} {:4x} {:2x} {:6} {:8} {:2x} {:4} {:8x}",
-                table.signature,
-                addr,
-                table.length(),
-                table.revision(),
-                table.oem_id().unwrap_or("??????"),
-                table.oem_table_id().unwrap_or("????????"),
-                table.oem_revision(),
-                table.creator_id().unwrap_or("????"),
-                table.creator_revision(),
-            );
+    for (addr, table) in acpi.table_headers() {
+        log::info!(
+            "[ACPI]: {} {:8x} {:4x} {:2x} {:6} {:8} {:2x} {:4} {:8x}",
+            table.signature,
+            addr,
+            table.length(),
+            table.revision(),
+            table.oem_id().unwrap_or("??????"),
+            table.oem_table_id().unwrap_or("????????"),
+            table.oem_revision(),
+            table.creator_id().unwrap_or("????"),
+            table.creator_revision(),
+        );
+    }
+
+    if let Ok(dsdt) = acpi.dsdt() {
+        let virtual_address = memory::phys_to_virt(PhysAddr::new(dsdt.phys_address as u64));
+        let table =
+            unsafe { core::slice::from_raw_parts(virtual_address.as_ptr(), dsdt.length as usize) };
+
+        let handler = Box::new(TapAmlHandler);
+        let mut aml = AmlContext::new(handler, DebugVerbosity::All);
+        if aml.parse_table(table).is_ok() {
+            log::info!("[ACPI]: AML DSDT parsed successfully");
+        } else {
+            log::error!("[ACPI]: Could not parse AML in DSDT");
         }
+    }
 
-        if let Ok(dsdt) = acpi.dsdt() {
-            let virtual_address = memory::phys_to_virt(PhysAddr::new(dsdt.phys_address as u64));
-            let table = unsafe {
-                core::slice::from_raw_parts(virtual_address.as_ptr(), dsdt.length as usize)
-            };
-
-            let handler = Box::new(TapAmlHandler);
-            let mut aml = AmlContext::new(handler, DebugVerbosity::None);
-            if aml.parse_table(table).is_ok() {
-                log::info!("[ACPI]: AML DSDT parsed successfully");
-            } else {
-                log::error!("[ACPI]: Could not parse AML in DSDT");
+    match AcpiPlatform::new(acpi) {
+        Ok(platform_info) => match platform_info.interrupt_model {
+            InterruptModel::Apic(apic) => {
+                apic::init(apic.io_apics.to_vec());
             }
-        }
-
-        match AcpiPlatform::new(acpi) {
-            Ok(platform_info) => match platform_info.interrupt_model {
-                InterruptModel::Apic(apic) => {
-                    apic::init(apic.io_apics.to_vec());
-                }
-                _ => {
-                    panic!("[ACPI]: Failed to get APIC!")
-                }
-            },
-            Err(_) => {
-                panic!("[ACPI]: Failed to get platform info!")
+            _ => {
+                panic!("[ACPI]: Failed to get APIC!")
             }
+        },
+        Err(_) => {
+            panic!("[ACPI]: Failed to get platform info!")
         }
     }
 }

@@ -1,5 +1,4 @@
 use crate::memory;
-use core::cmp::min;
 use good_memory_allocator::SpinLockedAllocator;
 use x86_64::structures::paging::mapper::MapToError;
 use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB};
